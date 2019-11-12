@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 from torch import nn
 from torch.nn import functional as F
+from gym.spaces import box
 
 
 class ActorCritic(nn.Module):
   def __init__(self, observation_space, action_space, hidden_size):
     super(ActorCritic, self).__init__()
     self.state_size = observation_space.shape[0]
-    self.action_size = action_space.n
+    if isinstance(action_space, box.Box):
+        action_shape = action_space.shape
+        if len(action_shape)==1:
+            self.action_size=action_shape[0]
+    else:   
+        self.action_size = action_space.n
 
     self.fc1 = nn.Linear(self.state_size, hidden_size)
     self.lstm = nn.LSTMCell(hidden_size, hidden_size)
