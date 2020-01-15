@@ -6,18 +6,10 @@ import gym
 import torch
 import csv
 import pickle
-import numpy as np
-from gym.spaces.box import Box
 
 from model import ActorCritic
 from utils import state_to_tensor, plot_line
 
-def turn_policy_into_box(policy,box):
-  policy = np.array(policy[0])
-  diff = np.abs(box.high-box.low)
-  policy *= diff
-  policy += box.low
-  return policy
 
 def test(rank, args, T, shared_model):
   torch.manual_seed(args.seed + rank)
@@ -66,15 +58,10 @@ def test(rank, args, T, shared_model):
             policy, _, _, (hx, cx) = model(state, (hx, cx))
 
           # Choose action greedily
-  #        action = policy.max(1)[1][0]
-   #       action = np.zeros_like(policy[0])
-    #      action[np.argmax(policy[0])] = 1
-          if isinstance(env.action_space, Box):
-            action = turn_policy_into_box(policy, env.action_space)
-          else:
-            action = np.argmax(policy[0]).item()
+          action = policy.max(1)[1][0]
+
           # Step
-          state, reward, done, _ = env.step(action)
+          state, reward, done, _ = env.step(action.item())
           state = state_to_tensor(state)
           reward_sum += reward
           done = done or episode_length >= args.max_episode_length  # Stop episodes at a max length
